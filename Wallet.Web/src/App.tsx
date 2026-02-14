@@ -7,6 +7,7 @@ import { WalletProvider } from './context/WalletContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import CreateWalletPage from './pages/CreateWalletPage';
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
 
                         <Route element={<ProtectedRoute />}>
                             <Route path="/dashboard" element={<DashboardPage />} />
+                            <Route path="/create-wallet" element={<CreateWalletPage />} />
                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         </Route>
                     </Routes>

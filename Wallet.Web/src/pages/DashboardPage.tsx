@@ -16,10 +16,13 @@ const transferSchema = z.object({
 
 type TransferForm = z.infer<typeof transferSchema>;
 
+import { useNavigate } from 'react-router-dom';
+
 export default function DashboardPage() {
     const { user, logout } = useAuth();
-    const { wallet, isLoading, refreshWallet, createWallet, transferMoney } = useWallet();
+    const { wallet, isLoading, refreshWallet, transferMoney } = useWallet();
     const [isTransferring, setIsTransferring] = useState(false);
+    const navigate = useNavigate();
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm<TransferForm>({
         resolver: zodResolver(transferSchema)
@@ -69,11 +72,12 @@ export default function DashboardPage() {
                     {!wallet ? (
                         <div className="bg-white p-6 rounded-xl shadow-sm text-center">
                             <h2 className="text-lg font-semibold text-gray-700 mb-2">No Wallet Found</h2>
+                            <p className="text-gray-500 text-sm mb-6">Create a wallet to start making transactions and tracking your balance.</p>
                             <button
-                                onClick={() => createWallet("USD")}
-                                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                                onClick={() => navigate('/create-wallet')}
+                                className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100"
                             >
-                                Create My Wallet
+                                Setup My Wallet
                             </button>
                         </div>
                     ) : (

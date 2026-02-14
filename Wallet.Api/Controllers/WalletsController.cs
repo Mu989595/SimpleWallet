@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Wallet.Application.UseCases.Commands.CreateWallet;
+using Wallet.Application.UseCases.Commands.DepositMoney;
 using Wallet.Application.UseCases.Commands.TransferMoney;
+using Wallet.Application.UseCases.Commands.WithdrawMoney;
 using Wallet.Application.UseCases.Queries.GetWallet;
 
 namespace Wallet.Api.Controllers;
@@ -44,6 +46,32 @@ public class WalletsController : ControllerBase
         return NotFound(result.Error);
     }
 
+    [HttpPost("deposit")]
+    public async Task<IActionResult> Deposit([FromBody] DepositMoneyCommand command)
+    {
+        var result = await _sender.Send(command);
+
+        if (result.IsSuccess)
+        {
+            return Ok("Deposit successful.");
+        }
+
+        return BadRequest(result.Error);
+    }
+
+    [HttpPost("withdraw")]
+    public async Task<IActionResult> Withdraw([FromBody] WithdrawMoneyCommand command)
+    {
+        var result = await _sender.Send(command);
+
+        if (result.IsSuccess)
+        {
+            return Ok("Withdrawal successful.");
+        }
+
+        return BadRequest(result.Error);
+    }
+
     [HttpPost("transfer")]
     public async Task<IActionResult> TransferMoney([FromBody] TransferMoneyCommand command)
     {
@@ -57,3 +85,4 @@ public class WalletsController : ControllerBase
         return BadRequest(result.Error);
     }
 }
+

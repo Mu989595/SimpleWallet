@@ -12,7 +12,7 @@ public enum TransactionType
 public class Transaction
 {
     public Guid Id { get; private set; }
-    public Money Amount { get; private set; }
+    public Money Amount { get; private set; } = null!;
     public TransactionType Type { get; private set; }
     public DateTime Timestamp { get; private set; }
     public Guid SourceWalletId { get; private set; }

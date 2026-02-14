@@ -4,10 +4,12 @@ using Wallet.Domain.Interfaces;
 
 namespace Wallet.Application.UseCases.Queries.GetWallet;
 
-// DTO
-public record WalletDto(Guid Id, Guid UserId, decimal Balance, string Currency, List<TransactionDto> Transactions);
+// DTOs
+public record MoneyDto(decimal Amount, string Currency);
 
-public record TransactionDto(decimal Amount, string Type, DateTime Date);
+public record WalletDto(Guid Id, Guid UserId, MoneyDto Balance, List<TransactionDto> Transactions);
+
+public record TransactionDto(Guid Id, MoneyDto Amount, string Type, DateTime Timestamp);
 
 // Query
 public record GetWalletQuery(Guid UserId) : IQuery<WalletDto>;
@@ -31,18 +33,21 @@ public class GetWalletQueryHandler : IRequestHandler<GetWalletQuery, Result<Wall
             return Result<WalletDto>.Failure("Wallet not found.");
         }
 
-        // Mapping (Manual for now, can use AutoMapper later)
         var transactions = wallet.Transactions
-            .Select(t => new TransactionDto(t.Amount.Amount, t.Type.ToString(), t.Timestamp))
+            .Select(t => new TransactionDto(
+                t.Id,
+                new MoneyDto(t.Amount.Amount, t.Amount.Currency),
+                t.Type.ToString(),
+                t.Timestamp))
             .ToList();
 
         var dto = new WalletDto(
             wallet.Id,
             wallet.UserId,
-            wallet.Balance.Amount,
-            wallet.Balance.Currency,
+            new MoneyDto(wallet.Balance.Amount, wallet.Balance.Currency),
             transactions);
 
         return Result<WalletDto>.Success(dto);
     }
 }
+

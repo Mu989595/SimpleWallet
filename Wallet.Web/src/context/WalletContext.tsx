@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { walletService, WalletDto, TransactionDto } from '../services/walletService';
+import { walletService, WalletDto } from '../services/walletService';
 import { useAuth } from './AuthContext';
 import { toast } from 'react-toastify';
 

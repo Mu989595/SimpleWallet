@@ -482,3 +482,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Frontend build artifacts
+dist/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts

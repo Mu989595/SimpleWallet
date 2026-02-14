@@ -9,6 +9,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy => policy.WithOrigins("http://localhost:3000")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 // Layer Injection
 builder.Services
     .AddApplication()
@@ -23,9 +31,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+app.UseCors("AllowFrontend");
 
-app.UseHttpsRedirection();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseAuthorization();
 

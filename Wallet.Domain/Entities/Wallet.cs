@@ -8,8 +8,8 @@ public class Wallet
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
-    public Money Balance { get; private set; }
-    public byte[] RowVersion { get; private set; } // Optimistic Concurrency
+    public Money Balance { get; private set; } = null!;
+    public byte[] RowVersion { get; private set; } = null!; // Optimistic Concurrency
 
     private readonly List<Transaction> _transactions = new();
     public IReadOnlyCollection<Transaction> Transactions => _transactions.AsReadOnly();
