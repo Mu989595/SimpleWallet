@@ -54,7 +54,13 @@ public class TransactionRepository : ITransactionRepository
         await _context.Transactions.AddAsync(transaction);
     }
 
+    public async Task<Transaction?> GetByIdAsync(Guid id)
+    {
+        return await _context.Transactions.FindAsync(id);
+    }
+
     public async Task<IEnumerable<Transaction>> GetHistoryAsync(Guid walletId)
+
     {
         return await _context.Transactions
             .Where(t => t.SourceWalletId == walletId || t.DestinationWalletId == walletId)

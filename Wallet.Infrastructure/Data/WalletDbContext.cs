@@ -12,6 +12,8 @@ public class WalletDbContext : DbContext
 
     public DbSet<WalletEntity> Wallets { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
+    public DbSet<User> Users { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

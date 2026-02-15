@@ -2,10 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wallet.Domain.Interfaces;
+using Wallet.Application.Interfaces;
 using Wallet.Infrastructure.Data;
 using Wallet.Infrastructure.Repositories;
+using Wallet.Infrastructure.Security;
 
 namespace Wallet.Infrastructure;
+
 
 public static class DependencyInjection
 {
@@ -19,8 +22,13 @@ public static class DependencyInjection
 
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtService, JwtService>();
+
         return services;
+
     }
 }
