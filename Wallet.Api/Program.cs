@@ -43,7 +43,7 @@ builder.Services.AddSwaggerGen(c =>
 
 // JWT Authentication Configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"] ?? "ThisIsADefaultSecretKeyThatShouldBeChanged";
+var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured.");
 
 builder.Services.AddAuthentication(options =>
 {

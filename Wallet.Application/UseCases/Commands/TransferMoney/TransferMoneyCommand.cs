@@ -60,7 +60,7 @@ public class TransferMoneyCommandHandler : IRequestHandler<TransferMoneyCommand,
             
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        catch (Exception ex) // Catch Domain Exceptions (like InsufficientFunds)
+        catch (DomainException ex)
         {
              return Result.Failure(ex.Message);
         }

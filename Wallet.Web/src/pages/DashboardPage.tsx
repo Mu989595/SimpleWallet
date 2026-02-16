@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useWallet } from '../context/WalletContext';
+import { toast } from 'react-toastify';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +23,8 @@ export default function DashboardPage() {
     const { user, logout } = useAuth();
     const { wallet, isLoading, refreshWallet, transferMoney } = useWallet();
     const [isTransferring, setIsTransferring] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
+    const [pendingData, setPendingData] = useState<TransferForm | null>(null);
     const navigate = useNavigate();
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm<TransferForm>({
@@ -33,15 +36,36 @@ export default function DashboardPage() {
     }, [refreshWallet]);
 
     const onSubmit = async (data: TransferForm) => {
+        // Step 1: Client-side balance check
+        if (wallet && data.amount > wallet.balance.amount) {
+            toast.error("Insufficient balance for this transfer");
+            return;
+        }
+
+        // Step 2: Show confirmation
+        setPendingData(data);
+        setIsConfirming(true);
+    };
+
+    const confirmTransfer = async () => {
+        if (!pendingData) return;
+
         try {
             setIsTransferring(true);
-            await transferMoney(data.recipientId, data.amount, data.currency);
+            await transferMoney(pendingData.recipientId, pendingData.amount, pendingData.currency);
             reset();
+            setIsConfirming(false);
+            setPendingData(null);
         } catch (e) {
             // Handled by global toast
         } finally {
             setIsTransferring(false);
         }
+    };
+
+    const cancelTransfer = () => {
+        setIsConfirming(false);
+        setPendingData(null);
     };
 
     if (isLoading && !wallet) {
@@ -145,56 +169,84 @@ export default function DashboardPage() {
                             <ArrowRightLeft className="text-blue-500" /> Transfer Money
                         </h3>
 
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Recipient User ID</label>
-                                <input
-                                    {...register('recipientId')}
-                                    placeholder="e.g. 3fa85f64..."
-                                    className={clsx(
-                                        "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition",
-                                        errors.recipientId ? "border-red-300 bg-red-50" : "border-gray-200"
-                                    )}
-                                />
-                                {errors.recipientId && <p className="text-red-500 text-xs mt-1">{errors.recipientId.message}</p>}
+                        {isConfirming ? (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-100 text-sm">
+                                    <p className="text-yellow-800 font-bold mb-1">Confirm Transaction</p>
+                                    <p className="text-yellow-700">
+                                        Are you sure you want to transfer <b>{pendingData?.amount} {pendingData?.currency}</b> to
+                                        <code className="block mt-1 text-xs bg-white/50 p-1 rounded font-mono">{pendingData?.recipientId}</code>
+                                    </p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={confirmTransfer}
+                                        disabled={isTransferring}
+                                        className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition disabled:opacity-50 flex justify-center items-center gap-2"
+                                    >
+                                        {isTransferring && <Loader2 className="animate-spin h-4 w-4" />}
+                                        Yes, Send Now
+                                    </button>
+                                    <button
+                                        onClick={cancelTransfer}
+                                        disabled={isTransferring}
+                                        className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4">
+                        ) : (
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Recipient User ID</label>
                                     <input
-                                        type="number"
-                                        step="0.01"
-                                        {...register('amount', { valueAsNumber: true })}
+                                        {...register('recipientId')}
+                                        placeholder="e.g. 3fa85f64..."
                                         className={clsx(
                                             "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition",
-                                            errors.amount ? "border-red-300 bg-red-50" : "border-gray-200"
+                                            errors.recipientId ? "border-red-300 bg-red-50" : "border-gray-200"
                                         )}
                                     />
-                                    {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount.message}</p>}
+                                    {errors.recipientId && <p className="text-red-500 text-xs mt-1">{errors.recipientId.message}</p>}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                                    <select
-                                        {...register('currency')}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white"
-                                    >
-                                        <option value="USD">USD</option>
-                                        <option value="EGP">EGP</option>
-                                        <option value="EUR">EUR</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                            <button
-                                type="submit"
-                                disabled={isTransferring || !wallet}
-                                className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                            >
-                                {isTransferring && <Loader2 className="animate-spin h-4 w-4" />}
-                                {isTransferring ? 'Processing...' : 'Transfer Now'}
-                            </button>
-                        </form>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            {...register('amount', { valueAsNumber: true })}
+                                            className={clsx(
+                                                "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition",
+                                                errors.amount ? "border-red-300 bg-red-50" : "border-gray-200"
+                                            )}
+                                        />
+                                        {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount.message}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                                        <select
+                                            {...register('currency')}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white"
+                                        >
+                                            <option value="USD">USD</option>
+                                            <option value="EGP">EGP</option>
+                                            <option value="EUR">EUR</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isTransferring || !wallet}
+                                    className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                >
+                                    Proceed to Confirm
+                                </button>
+                            </form>
+                        )}
 
                         <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
                             <p>💡 <b>Tip:</b> Transfers are atomic. If the recipient doesn't exist, your money will not be deducted.</p>
